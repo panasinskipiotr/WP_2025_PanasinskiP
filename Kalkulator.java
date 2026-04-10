@@ -1,11 +1,13 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.*;
 
-public class Kalkulator extends JFrame implements ActionListener {
+public class Kalkulator extends JFrame implements ActionListener{
 
     private JTextField textFieldScreen=new JTextField(10);
+
+    private JButton button_0=new JButton("0");
     private JButton button_1=new JButton("1");
     private JButton button_2=new JButton("2");
     private JButton button_3=new JButton("3");
@@ -15,151 +17,173 @@ public class Kalkulator extends JFrame implements ActionListener {
     private JButton button_7=new JButton("7");
     private JButton button_8=new JButton("8");
     private JButton button_9=new JButton("9");
-    private JButton button_0=new JButton("0");
+
     private JButton buttonAdd=new JButton("+");
     private JButton buttonSub=new JButton("-");
-    private JButton buttonDivide=new JButton("/");
     private JButton buttonMultiply=new JButton("*");
+    private JButton buttonDivide=new JButton("/");
+
     private JButton buttonC=new JButton("C");
     private JButton buttonCE=new JButton("CE");
     private JButton buttonEquals=new JButton("=");
     private JButton buttonBckspc=new JButton("<-");
 
-    private int value_1;
-    private int value_2;
-    private String operator = "";
-    private boolean isZero = true;
+    private KalkulatorModel model;
 
     public Kalkulator(){
-        
-        DigitListener digitListener=new DigitListener();
 
-        JPanel panelButtons=new JPanel(new GridLayout(5,4));
+        model=new KalkulatorModel(textFieldScreen);
+
+        JPanel panelButtons=new JPanel(new GridLayout(5, 4, 5, 5));
+
         panelButtons.add(button_7);
-        button_7.addActionListener(this);
         panelButtons.add(button_8);
-        button_8.addActionListener(this);
         panelButtons.add(button_9);
-        button_9.addActionListener(this);
         panelButtons.add(buttonCE);
-        buttonCE.addActionListener(this);
 
         panelButtons.add(button_4);
-        button_4.addActionListener(this);
         panelButtons.add(button_5);
-        button_5.addActionListener(this);
         panelButtons.add(button_6);
-        button_6.addActionListener(this);
         panelButtons.add(buttonAdd);
-        buttonAdd.addActionListener(digitListener);
 
         panelButtons.add(button_1);
-        button_1.addActionListener(this);
         panelButtons.add(button_2);
-        button_2.addActionListener(this);
         panelButtons.add(button_3);
-        button_3.addActionListener(this);
         panelButtons.add(buttonSub);
-        buttonSub.addActionListener(digitListener);
 
         panelButtons.add(new JLabel());
         panelButtons.add(button_0);
-        button_0.addActionListener(this);
         panelButtons.add(new JLabel());
         panelButtons.add(buttonMultiply);
-        buttonMultiply.addActionListener(digitListener);
 
         panelButtons.add(buttonBckspc);
         panelButtons.add(buttonC);
-        buttonC.addActionListener(this);
         panelButtons.add(buttonEquals);
-        buttonEquals.addActionListener(this);
         panelButtons.add(buttonDivide);
-        buttonDivide.addActionListener(digitListener);
-        
-        JPanel panelMain=new JPanel(new BorderLayout());
 
-        panelMain.add(BorderLayout.CENTER, panelButtons);
-        panelMain.add(BorderLayout.NORTH,textFieldScreen);
+        JButton[] digitButtons={button_0, button_1, button_2, button_3, button_4, button_5, button_6, button_7, button_8, button_9};
+        for (JButton b:digitButtons) b.addActionListener(this);
+
+        JButton[] operatorButtons={buttonAdd, buttonSub, buttonMultiply, buttonDivide};
+        for (JButton b:operatorButtons) b.addActionListener(this);
+
+        buttonEquals.addActionListener(this);
+        buttonC.addActionListener(this);
+        buttonCE.addActionListener(this);
+        buttonBckspc.addActionListener(this);
+
+        JPanel panelMain=new JPanel(new BorderLayout());
+        panelMain.add(textFieldScreen, BorderLayout.NORTH);
+        panelMain.add(panelButtons, BorderLayout.CENTER);
 
         setContentPane(panelMain);
-
-
-
-        //setSize(200,300);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setVisible(true);
-
     }
 
     public static void main(String[] args){
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-                public void run(){
-                    new Kalkulator();
-                }
-        });
+        EventQueue.invokeLater(() -> new Kalkulator());
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        String value = textFieldScreen.getText();
-        String digit = ((JButton) e.getSource()).getText();
+    public void actionPerformed(ActionEvent e){
+        String input=((JButton) e.getSource()).getText();
 
-        if (digit.equals("0")) {
-            if (isZero) {
-                textFieldScreen.setText("0");
-                    isZero = false;
-            }
-        } else if (digit.equals("<-")){
-            if (value.length()>0) {
+        if ("0123456789".contains(input)){
+            model.inputDigit(input);
+        }else if ("+-*/".contains(input)){
+            model.inputOperator(input);
+        }else if (input.equals("=")){
+            model.inputOperator("=");
+        }else if (input.equals("C")){
+            textFieldScreen.setText("");
+            model=new KalkulatorModel(textFieldScreen);
+        }else if (input.equals("CE")){
+            textFieldScreen.setText("");
+        }else if (input.equals("<-")){
+            String value = textFieldScreen.getText();
+            if (value.length()>0){
                 textFieldScreen.setText(value.substring(0, value.length()-1));
-            }
-        } else if (digit.equals("=")){
-            value_2 = Integer.parseInt(value);
-            switch (operator) {
-                case "+":
-                    textFieldScreen.setText(String.valueOf(value_1+value_2));
-                    break;
-                case "-":
-                    textFieldScreen.setText(String.valueOf(value_1-value_2));
-                    break;
-                case "*":
-                    textFieldScreen.setText(String.valueOf(value_1*value_2));
-                    break;
-                case "/":
-                    if (value_2 != 0) {
-                        textFieldScreen.setText(String.valueOf(value_1/value_2));
-                    } else {
-                        textFieldScreen.setText("Error");
-                    }
-                    break;
-            }
-            operator="";
-        } else if (digit.equals("C")) {
-            textFieldScreen.setText("");
-            value_1=0;
-            value_2=0;
-            operator="";
-            isZero=true;
-        } else if (digit.equals("CE")){
-            textFieldScreen.setText("");
-        } else {
-            if (operator.isEmpty()) {
-                textFieldScreen.setText(value+digit);
-            } else {
-                value_1=Integer.parseInt(value);
-                operator=digit;
-                textFieldScreen.setText("");
             }
         }
     }
 
-    class DigitListener implements ActionListener{
-    @Override
-    public void actionPerformed(ActionEvent e){
-        operator=((JButton) e.getSource()).getText();
+    class KalkulatorModel{
+        private int value1=0;
+        private int value2=0;
+        private String operator="";
+        private int state=1;
+        private JTextField screen;
+
+        public KalkulatorModel(JTextField screen){
+            this.screen=screen;
+        }
+
+        public void inputDigit(String digit){
+            switch (state){
+                case 1->screen.setText(screen.getText()+digit);
+                case 2->{
+                    screen.setText(digit);
+                    state=3;
+                }
+                case 3->screen.setText(screen.getText()+digit);
+                case 4->{
+                    screen.setText(digit); 
+                    operator="";
+                    state=1;
+                }
+            }
+        }
+
+        public void inputOperator(String op){
+            if (op.equals("=")){
+                if (!operator.isEmpty() && state==3) {
+                    value2=Integer.parseInt(screen.getText());
+                    int result=calculate(value1, value2, operator);
+                    screen.setText(String.valueOf(result));
+                    state=4;
+                    operator="";
+                }
+                return;
+            }
+
+            switch (state){
+                case 1->{
+                    value1=Integer.parseInt(screen.getText());
+                    operator=op;
+                    state=2;
+                    screen.setText(value1+operator);
+                }
+                case 2->{
+                    operator=op;
+                    screen.setText(value1+operator);
+                }
+                case 3->{
+                    value2=Integer.parseInt(screen.getText());
+                    int result=calculate(value1, value2, operator);
+                    value1=result;
+                    operator=op;
+                    state=2;
+                    screen.setText(value1+operator);
+                }
+                case 4->{
+                    value1=Integer.parseInt(screen.getText());
+                    operator=op;
+                    state=2;
+                    screen.setText(value1+operator);
+                }
+            }
+        }
+
+        private int calculate(int v1, int v2, String op){
+            return switch (op){
+                case "+" -> v1+v2;
+                case "-" -> v1-v2;
+                case "*" -> v1*v2;
+                case "/" -> v2!=0?v1/v2:0;
+                default -> 0;
+            };
+        }
     }
 }
-}
-
